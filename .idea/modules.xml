@@ -2,9 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/NaikSoftware.iml" filepath="$PROJECT_DIR$/NaikSoftware.iml" />
-      <module fileurl="file://$PROJECT_DIR$/advancedviews/advancedviews.iml" filepath="$PROJECT_DIR$/advancedviews/advancedviews.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/NaikSoftware-Lib-Android.iml" filepath="$PROJECT_DIR$/NaikSoftware-Lib-Android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lib/lib.iml" filepath="$PROJECT_DIR$/lib/lib.iml" />
     </modules>
   </component>
 </project>
