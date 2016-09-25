@@ -17,18 +17,20 @@ import com.google.android.gms.common.AccountPicker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.Scopes;
-import com.riversoft.core.network.NetworkHelper;
-import com.riversoft.eventssion.core.R;
-import com.riversoft.eventssion.core.auth.AuthProvider;
 
 import java.io.IOException;
 
-public class GoogleAuthProvider extends AuthProvider {
+import ua.naiksoftware.android.auth.AuthException;
+import ua.naiksoftware.android.auth.AuthProvider;
+import ua.naiksoftware.android.auth.AuthType;
+import ua.naiksoftware.android.network.NetworkHelper;
+
+public class GoogleAuthProvider<T> extends AuthProvider<T> {
 
     private static final int REQUEST_CODE_PICK_ACCOUNT = 1000;
     private static final int REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR = 1001;
     private static final int REQUEST_CODE_PLAY_SERVICES_NOT_AVAILABLE_ERROR = 1002;
-    private static final String SCOPE = "oauth2:" + Scopes.PROFILE + " " + Scopes.EMAIL;//https://www.googleapis.com/auth/userinfo.profile";
+    private static final String SCOPE = "oauth2:" + Scopes.PROFILE + " " + Scopes.EMAIL; //https://www.googleapis.com/auth/userinfo.profile";
 
     private String mEmail;
 
@@ -37,48 +39,49 @@ public class GoogleAuthProvider extends AuthProvider {
     }
 
     @Override
-    protected void init(Bundle arg) {
-
+    protected AuthType getType() {
+        return AuthType.GOOGLE;
     }
 
     @Override
     public void login() {
-        int resultCode = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(mActivity.getApplicationContext());
+        final AuthCallback<T> authCallback = getAuthCallback();
+        int resultCode = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(getActivity().getApplicationContext());
         if (resultCode == ConnectionResult.SUCCESS) {
             pickUserAccount();
         } else if (GoogleApiAvailability.getInstance().isUserResolvableError(resultCode)) {
-            Dialog dialog = GoogleApiAvailability.getInstance().getErrorDialog(mActivity, resultCode,
+            Dialog dialog = GoogleApiAvailability.getInstance().getErrorDialog(getActivity(), resultCode,
                     REQUEST_CODE_PLAY_SERVICES_NOT_AVAILABLE_ERROR, new DialogInterface.OnCancelListener() {
                         @Override
                         public void onCancel(DialogInterface dialog) {
-                            if (mAuthCallback != null) {
-                                mAuthCallback.onCancel();
+                            if (authCallback != null) {
+                                authCallback.onCancel();
                             }
                         }
                     });
             dialog.show();
-        }else if (mAuthCallback != null){
-            mAuthCallback.onCancel();
+        } else if (authCallback != null) {
+            authCallback.onCancel();
         }
     }
 
 
     private void pickUserAccount() {
-        String[] accountTypes = new String[] {"com.google"};
+        String[] accountTypes = new String[]{"com.google"};
         Intent intent = AccountPicker.newChooseAccountIntent(null, null,
                 accountTypes, false, null, null, null, null);
-        mActivity.startActivityForResult(intent, REQUEST_CODE_PICK_ACCOUNT);
+        getActivity().startActivityForResult(intent, REQUEST_CODE_PICK_ACCOUNT);
     }
 
     @Override
     public void logout() {
-
+        // Nope
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(resultCode != Activity.RESULT_OK) return;
-        switch (requestCode){
+        if (resultCode != Activity.RESULT_OK) return;
+        switch (requestCode) {
             case REQUEST_CODE_PICK_ACCOUNT:
                 mEmail = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
                 // With the account name acquired, go get the auth token
@@ -104,17 +107,17 @@ public class GoogleAuthProvider extends AuthProvider {
         if (mEmail == null) {
             pickUserAccount();
         } else {
-            if (NetworkHelper.isOnline(mActivity.getApplicationContext())) {
-                new GetUserNameTask(mActivity, mEmail, SCOPE).execute();
+            if (NetworkHelper.isOnline(getActivity().getApplicationContext())) {
+                new GetUserNameTask(getActivity(), mEmail, SCOPE).execute();
             } else {
-                if (mAuthCallback != null) {
-                    mAuthCallback.onError(mActivity.getString(R.string.error_no_internet_connection));
+                if (getAuthCallback() != null) {
+                    getAuthCallback().onError(new AuthException("Device is in offline"));
                 }
             }
         }
     }
 
-    public class GetUserNameTask extends AsyncTask<Void,Void,String> {
+    public class GetUserNameTask extends AsyncTask<Void, Void, String> {
         private Activity mActivity;
         private String mScope;
         private String mEmail;
@@ -143,8 +146,8 @@ public class GoogleAuthProvider extends AuthProvider {
                 mActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if (mAuthCallback != null) {
-                            mAuthCallback.onError(e.getMessage());
+                        if (getAuthCallback() != null) {
+                            getAuthCallback().onError(e);
                         }
                     }
                 });
@@ -154,9 +157,9 @@ public class GoogleAuthProvider extends AuthProvider {
 
         @Override
         protected void onPostExecute(String accessToken) {
-            if (!TextUtils.isEmpty(accessToken)){
-                if (mAuthCallback != null){
-                    mAuthCallback.onSuccess(accessToken, mEmail);
+            if (!TextUtils.isEmpty(accessToken)) {
+                if (getAuthCallback() != null) {
+                    getAuthCallback().onSuccess(mEmail, null, accessToken);
                 }
             }
         }
@@ -177,8 +180,8 @@ public class GoogleAuthProvider extends AuthProvider {
                 // Report and log the error as appropriate for your app.
 //                LogHelper.LOGD("GoogleAuthProvider","GetUserNameTask: " + fatalException.getMessage());
 //                Toast.makeText(mActivity, fatalException.getMessage(), Toast.LENGTH_SHORT).show();
-                if (mAuthCallback != null) {
-                    mAuthCallback.onError(fatalException.getMessage());
+                if (getAuthCallback() != null) {
+                    getAuthCallback().onError(fatalException);
                 }
             }
             return null;
@@ -216,5 +219,10 @@ public class GoogleAuthProvider extends AuthProvider {
                 }
             });
         }
+    }
+
+    @Override
+    protected void cancel() {
+        // Nope
     }
 }

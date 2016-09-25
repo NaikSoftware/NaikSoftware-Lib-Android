@@ -4,36 +4,38 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.riversoft.eventssion.core.model.MyUser;
+public abstract class AuthProvider<T> {
 
+    private final Activity mActivity;
+    private AuthCallback<T> mAuthCallback;
 
-public abstract class AuthProvider {
-
-    protected final Activity mActivity;
-    protected AuthCallback mAuthCallback;
-
-
-     public interface AuthCallback{
-        void onSuccess(final String socialAuthToken, String email);
-        void onSuccess(final MyUser user);
+     public interface AuthCallback<T> {
+        void onSuccess(String email, String user, String socialAuthToken);
         void onCancel();
-        void onError(final String message);
+        void onError(final Throwable message);
     }
 
     public AuthProvider(final Activity activity, Bundle arg) {
-        assert (null != activity);
+        if (activity == null) throw new IllegalArgumentException("Activity might be non null!");
         mActivity = activity;
-        init(arg);
     }
 
-    abstract protected void init(Bundle arg);
     abstract public void login();
     abstract public void logout();
     abstract protected void onActivityResult(int requestCode, int resultCode, Intent data);
+    abstract protected void cancel();
+    abstract protected AuthType getType();
 
-    AuthProvider setAuthCallback(AuthCallback authCallback) {
+    AuthProvider setAuthCallback(AuthCallback<T> authCallback) {
         mAuthCallback = authCallback;
         return this;
     }
 
+    public AuthCallback<T> getAuthCallback() {
+        return mAuthCallback;
+    }
+
+    public Activity getActivity() {
+        return mActivity;
+    }
 }

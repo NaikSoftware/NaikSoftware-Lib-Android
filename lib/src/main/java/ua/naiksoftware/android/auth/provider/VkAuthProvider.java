@@ -4,27 +4,30 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.riversoft.eventssion.core.auth.AuthProvider;
 import com.vk.sdk.VKAccessToken;
 import com.vk.sdk.VKCallback;
 import com.vk.sdk.VKScope;
 import com.vk.sdk.VKSdk;
 import com.vk.sdk.api.VKError;
 
-public class VkAuthProvider extends AuthProvider implements VKCallback<VKAccessToken> {
+import ua.naiksoftware.android.auth.AuthException;
+import ua.naiksoftware.android.auth.AuthProvider;
+import ua.naiksoftware.android.auth.AuthType;
 
+public class VkAuthProvider<T> extends AuthProvider<T> implements VKCallback<VKAccessToken> {
 
     public VkAuthProvider(Activity activity, Bundle arg) {
         super(activity, arg);
     }
 
     @Override
-    protected void init(Bundle arg) {
+    protected AuthType getType() {
+        return AuthType.VKONTAKTE;
     }
 
     @Override
     public void login() {
-        VKSdk.login(mActivity, VKScope.EMAIL);
+        VKSdk.login(getActivity(), VKScope.EMAIL);
     }
 
     @Override
@@ -39,19 +42,24 @@ public class VkAuthProvider extends AuthProvider implements VKCallback<VKAccessT
 
     @Override
     public void onResult(VKAccessToken res) {
-        if (mAuthCallback != null) {
-            mAuthCallback.onSuccess(res.accessToken, res.email);
+        if (getAuthCallback() != null) {
+            getAuthCallback().onSuccess(res.email, res.userId, res.accessToken);
         }
     }
 
     @Override
     public void onError(VKError error) {
-        if (mAuthCallback != null) {
+        AuthCallback<T> authCallback = getAuthCallback();
+        if (authCallback != null) {
             if (error.errorCode == VKError.VK_CANCELED) {
-                mAuthCallback.onCancel();
+                authCallback.onCancel();
             } else {
-                mAuthCallback.onError(error.errorMessage);
+                authCallback.onError(new AuthException(error.httpError));
             }
         }
+    }
+
+    @Override
+    protected void cancel() {
     }
 }

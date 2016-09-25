@@ -33,6 +33,11 @@ dependencies {
     provided 'com.android.support:design:24.2.1'
     provided 'com.android.support:recyclerview-v7:24.2.1'
 
+    // For auth providers
+    provided 'com.google.android.gms:play-services-auth:9.6.1'
+    provided 'com.facebook.android:facebook-android-sdk:4.9.0'
+    provided 'com.vk:androidsdk:1.6.3'
+
     provided 'io.reactivex:rxjava:1.2.0'
     provided 'io.reactivex:rxandroid:1.2.1'
     provided 'net.danlew:android.joda:2.9.4.1'

@@ -1,191 +1,189 @@
 package ua.naiksoftware.android.auth;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-
-import com.riversoft.eventssion.core.R;
-import com.riversoft.eventssion.core.auth.provider.FacebookAuthProvider;
-import com.riversoft.eventssion.core.auth.provider.GoogleAuthProvider;
-import com.riversoft.eventssion.core.auth.provider.VkAuthProvider;
-import com.riversoft.eventssion.core.model.MyUser;
-import com.riversoft.eventssion.core.network.util.RetrofitExceptionHelper;
-import com.riversoft.eventssion.core.util.LogHelper;
+import android.support.annotation.Nullable;
 
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
+import ua.naiksoftware.android.auth.provider.FacebookAuthProvider;
+import ua.naiksoftware.android.auth.provider.GoogleAuthProvider;
+import ua.naiksoftware.android.auth.provider.VkAuthProvider;
+import ua.naiksoftware.android.util.LogHelper;
 
-// TODO: Refactor to using new instance each time we need this class
-public class AuthManager {
-    private static final String LOG_TAG = LogHelper.makeLogTag(AuthManager.class);
+/**
+ * Just call init and callbacks from activity lifecycle and receive user
+ *
+ * @param <T> user model
+ */
+public class AuthManager<T> {
 
-    private static final String STATE_KEY_AUTH_PROVIDER = "STATE_KEY_AUTH_PROVIDER";
-    private static final String STATE_KEY_IS_PROCESSED = "STATE_KEY_IS_PROCESSED";
-    private static final String STATE_KEY_ARGS = "STATE_KEY_ARGS";
+    private static final String TAG = LogHelper.makeLogTag(AuthManager.class);
 
-    private Context mContext;
-    private AuthProvider mAuthProvider;
-    private LoginCallback mLoginCallback;
-    private AuthType mAuthType;
-    private boolean mIsProcessed = false;
-    private GetMyUserRequestProvider mGetMyUserRequestProvider;
+    public static final String ARG_LOGIN = "arg_login";
+    public static final String ARG_PASSWORD = "arg_password";
 
-    public interface GetMyUserRequestProvider {
-        Observable<MyUser> getGetMyUserRequest(String socialAuthToken, String email, AuthType authType);
-    }
-
-    public interface LoginCallback {
-        void onSuccess(final MyUser user);
-
-        void onFailed(final String message);
-
-        void onCancel();
-    }
+    private static AuthManager INSTANCE;
 
     private AuthManager() {
     }
 
-    private static class SAMHolder {
-        private static final AuthManager INSTANCE = new AuthManager();
+    public static AuthManager getInstance() {
+        if (INSTANCE == null) INSTANCE = new AuthManager();
+        return INSTANCE;
+    }
+
+    private AuthProvider<T> mAuthProvider;
+    private LoginCallback<T> mLoginCallback;
+    private boolean mIsProcessing = false;
+    private GetMyUserRequestProvider<T> mGetMyUserRequestProvider;
+
+    public interface GetMyUserRequestProvider<T> {
+
+        Observable<T> getGetMyUserRequest(String username, String password, String socialAuthToken, AuthType authType);
+    }
+
+    public interface LoginCallback<T> {
+
+        /**
+         * Called when user received from you server
+         */
+        void onSuccess(T user);
+
+        void onFailed(Throwable message);
+
+        void onCancel();
+
+        /**
+         * Called when user fetched from other service (Google, Facebook, Vk, etc)
+         */
+        void onThirdPartyUserReceived(String email, String username, String accessToken);
     }
 
     /**
-     * Use this to release all static fields
+     * Call in onDestroy
      */
-    public static void release() {
-        SAMHolder.INSTANCE.mContext = null;
-        SAMHolder.INSTANCE.mAuthProvider = null;
-        SAMHolder.INSTANCE.mLoginCallback = null;
-        SAMHolder.INSTANCE.mAuthType = null;
-        SAMHolder.INSTANCE.mIsProcessed = false;
+    public void onDestroy() {
+        if (mAuthProvider != null) mAuthProvider.cancel();
     }
 
+    public boolean isProcessing() {
+        return mIsProcessing;
+    }
 
-    public static void onSaveInstanceState(Bundle outState) {
-        if (null != SAMHolder.INSTANCE.mAuthType) {
-            outState.putString(STATE_KEY_AUTH_PROVIDER, SAMHolder.INSTANCE.mAuthType.name());
-            outState.putBoolean(STATE_KEY_IS_PROCESSED, SAMHolder.INSTANCE.mIsProcessed);
+    /**
+     * Use this for built-in AuthProvider's
+     */
+    public void init(final Activity activity, final AuthType authType, Bundle args, final LoginCallback<T> loginCallback, GetMyUserRequestProvider<T> myUserRequestProvider) throws AuthException {
+        if (mIsProcessing) return;
+        switch (authType) {
+            case FACEBOOK:
+                mAuthProvider = new FacebookAuthProvider<>(activity, args);
+                break;
+            case GOOGLE:
+                mAuthProvider = new GoogleAuthProvider<>(activity, args);
+                break;
+            case VKONTAKTE:
+                mAuthProvider = new VkAuthProvider<>(activity, args);
+                break;
         }
+        init(mAuthProvider, args, loginCallback, myUserRequestProvider);
     }
 
-    public static void onActivityCreate(final Activity loginActivity, Bundle savedInstanceState, LoginCallback loginCallback, GetMyUserRequestProvider myUserRequestProvider) {
-        if (savedInstanceState != null) {
-            AuthType authType = AuthType.valueOf(savedInstanceState.getString(STATE_KEY_AUTH_PROVIDER, AuthType.NONE.name()));
-            boolean isProcessed = savedInstanceState.getBoolean(STATE_KEY_IS_PROCESSED, false);
-            if (authType != AuthType.NONE && isProcessed) {
-                final Bundle arg = savedInstanceState.getBundle(STATE_KEY_ARGS);
-                init(loginActivity, authType, arg, loginCallback, myUserRequestProvider);
-                SAMHolder.INSTANCE.mIsProcessed = true;
-            }
+    /**
+     * Use for custom AuthProvider's
+     *
+     * @param authProvider if null use NATIVE provider (just call passed login request)
+     */
+    public void init(@Nullable AuthProvider<T> authProvider, Bundle args, final LoginCallback<T> loginCallback, GetMyUserRequestProvider<T> myUserRequestProvider) throws AuthException {
+        if (mIsProcessing) return;
+        mLoginCallback = loginCallback;
+        mGetMyUserRequestProvider = myUserRequestProvider;
+        mAuthProvider = authProvider;
+        if (authProvider == null) {
+            mIsProcessing = true;
+            String login = args.getString(ARG_LOGIN);
+            String pass = args.getString(ARG_PASSWORD);
+            if (login == null || pass == null)
+                throw new AuthException("Login or password not found in bundle");
+            callMyUserRequest(login, pass, null, AuthType.NATIVE);
+        } else {
+            final AuthType authType = authProvider.getType();
+            authProvider.setAuthCallback(new AuthProvider.AuthCallback<T>() {
+
+                @Override
+                public void onSuccess(String email, String user, String accessToken) {
+                    LogHelper.LOGD(TAG, "Social Access Token received: " + accessToken);
+                    loginCallback.onThirdPartyUserReceived(email, user, accessToken);
+                    callMyUserRequest(email, null, accessToken, authType);
+                }
+
+                @Override
+                public void onCancel() {
+                    callbackCancel();
+                }
+
+                @Override
+                public void onError(Throwable message) {
+                    callbackError(message);
+                }
+            });
         }
-    }
-
-    public static boolean isProcessed() {
-        return SAMHolder.INSTANCE.mIsProcessed;
-    }
-
-    public static AuthManager init(final Activity loginActivity, final AuthType authType, Bundle arg, LoginCallback loginCallback, GetMyUserRequestProvider myUserRequestProvider) {
-        if (!SAMHolder.INSTANCE.mIsProcessed) {
-            switch (authType) {
-                case FACEBOOK:
-                    SAMHolder.INSTANCE.mAuthProvider = new FacebookAuthProvider(loginActivity, arg);
-                    break;
-                case GOOGLE:
-                    SAMHolder.INSTANCE.mAuthProvider = new GoogleAuthProvider(loginActivity, arg);
-                    break;
-                case VKONTAKTE:
-                    SAMHolder.INSTANCE.mAuthProvider = new VkAuthProvider(loginActivity, arg);
-                    break;
-                case NATIVE:
-                    SAMHolder.INSTANCE.mAuthProvider = new NativeAuthProvider(loginActivity, arg);
-                    break;
-            }
-            SAMHolder.INSTANCE.mAuthProvider.setAuthCallback(sAuthCallback);
-            SAMHolder.INSTANCE.mLoginCallback = loginCallback;
-            SAMHolder.INSTANCE.mContext = loginActivity.getApplicationContext();
-            SAMHolder.INSTANCE.mAuthType = authType;
-            SAMHolder.INSTANCE.mGetMyUserRequestProvider = myUserRequestProvider;
-        }
-        return SAMHolder.INSTANCE;
     }
 
     public void startLogin() {
-        if (SAMHolder.INSTANCE.mAuthProvider != null && !SAMHolder.INSTANCE.mIsProcessed) {
-            SAMHolder.INSTANCE.mIsProcessed = true;
-            SAMHolder.INSTANCE.mAuthProvider.login();
+        if (mAuthProvider != null && !mIsProcessing) {
+            mIsProcessing = true;
+            mAuthProvider.login();
         }
     }
 
-    public static void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (SAMHolder.INSTANCE.mAuthProvider != null) {
-            SAMHolder.INSTANCE.mAuthProvider.onActivityResult(requestCode, resultCode, data);
+    /**
+     * Call in onActivityResult
+     */
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (mAuthProvider != null) {
+            mAuthProvider.onActivityResult(requestCode, resultCode, data);
         }
         if (resultCode != Activity.RESULT_OK) {
             callbackCancel();
         }
     }
 
-    private static AuthProvider.AuthCallback sAuthCallback = new AuthProvider.AuthCallback() {
-
-        @Override
-        public void onSuccess(final String socialAuthToken, String email) {
-            LogHelper.LOGD(LOG_TAG, "Social Access Token received: " + socialAuthToken);
-            callMyUserRequest(socialAuthToken, email);
-        }
-
-        @Override
-        public void onSuccess(MyUser user) {
-            LogHelper.LOGD(LOG_TAG, "MyUser info received: " + user.toString());
-            callbackSuccess(user);
-        }
-
-        @Override
-        public void onCancel() {
-            callbackCancel();
-        }
-
-        @Override
-        public void onError(String message) {
-            callbackError(message);
-        }
-    };
-
-    private static void callbackSuccess(MyUser user) {
-        SAMHolder.INSTANCE.mIsProcessed = false;
-        if (SAMHolder.INSTANCE.mLoginCallback != null) {
-            SAMHolder.INSTANCE.mLoginCallback.onSuccess(user);
+    private void callbackSuccess(T user) {
+        mIsProcessing = false;
+        if (mLoginCallback != null) {
+            mLoginCallback.onSuccess(user);
         }
     }
 
-    private static void callbackError(String message) {
-        SAMHolder.INSTANCE.mIsProcessed = false;
-        if (message == null) {
-            message = "Login error!";
-        }
-        LogHelper.LOGD("LoginActivity", "Login onError: " + message);
-        if (SAMHolder.INSTANCE.mLoginCallback != null) {
-            SAMHolder.INSTANCE.mLoginCallback.onFailed(message);
+    private void callbackError(Throwable error) {
+        mIsProcessing = false;
+        LogHelper.LOGD("LoginActivity", "Login onError: " + error.getMessage());
+        if (mLoginCallback != null) {
+            mLoginCallback.onFailed(error);
         }
     }
 
-    private static void callbackCancel() {
-        SAMHolder.INSTANCE.mIsProcessed = false;
-        LogHelper.LOGD(LOG_TAG, "Login onCancel");
-        if (SAMHolder.INSTANCE.mLoginCallback != null) {
-            SAMHolder.INSTANCE.mLoginCallback.onCancel();
+    private void callbackCancel() {
+        mIsProcessing = false;
+        LogHelper.LOGD(TAG, "Login onCancel");
+        if (mLoginCallback != null) {
+            mLoginCallback.onCancel();
         }
     }
 
-    private static void callMyUserRequest(final String socialAuthToken, String email) {
-        LogHelper.LOGD(LOG_TAG, "Start call to main server...");
-        SAMHolder.INSTANCE.mGetMyUserRequestProvider.getGetMyUserRequest(socialAuthToken, email, SAMHolder.INSTANCE.mAuthType)
+    private void callMyUserRequest(final String login, final String password, final String socialAuthToken, final AuthType authType) {
+        LogHelper.LOGD(TAG, "Start call to server...");
+        mGetMyUserRequestProvider.getGetMyUserRequest(login, password, socialAuthToken, authType)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<MyUser>() {
-                    public boolean onNextCalled = false;
+                .subscribe(new Subscriber<T>() {
+
+                    private boolean onNextCalled = false;
 
                     @Override
                     public void onCompleted() {
@@ -194,44 +192,16 @@ public class AuthManager {
 
                     @Override
                     public void onError(Throwable e) {
-                        RetrofitExceptionHelper.NetworkException networkException = RetrofitExceptionHelper.parseException(e);
-                        String message = "Something went wrong";
-                        Context context = SAMHolder.INSTANCE.mContext;
-                        if (context != null) {
-                            switch (networkException) {
-                                case CONNECTION_ERROR:
-                                    message = context.getString(R.string.error_no_internet_connection);
-                                    break;
-                                case SOCKET_TIMEOUT:
-                                    message = context.getString(R.string.error_something_went_wrong_check_internet);
-                                    break;
-                                case NOT_FOUND:
-                                case SERVER_ERROR:
-                                    message = context.getString(R.string.error_something_went_wrong);
-                                    break;
-                                case UNKNOWN_HOST_EXCEPTION:
-                                    message = context.getString(R.string.error_something_went_wrong_check_internet);
-                                    break;
-                                case SEE_OTHER:
-                                    message = context.getString(R.string.error_email_already_in_use);
-                                    break;
-                                case FORBIDDEN:
-                                case CUSTOM:
-                                default:
-                                    message = e.getLocalizedMessage();
-                                    break;
-                            }
-                        }
-                        callbackError(message);
+                        callbackError(e);
                     }
 
                     @Override
-                    public void onNext(MyUser myUser) {
+                    public void onNext(T myUser) {
                         onNextCalled = true;
-                        if (myUser == null || SAMHolder.INSTANCE.mAuthType == null) {
-                            callbackError("Something went wrong");
+                        if (myUser == null) {
+                            callbackError(new AuthException("Something went wrong, user from server is null"));
                         } else {
-                            LogHelper.LOGD(LOG_TAG, "MyUser info received: " + myUser.toString());
+                            LogHelper.LOGD(TAG, "MyUser info received: " + myUser.toString());
                             callbackSuccess(myUser);
                         }
                     }

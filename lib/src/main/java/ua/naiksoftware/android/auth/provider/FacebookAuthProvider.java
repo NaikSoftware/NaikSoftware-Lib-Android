@@ -11,47 +11,46 @@ import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
-import com.riversoft.eventssion.core.auth.AuthProvider;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class FacebookAuthProvider extends AuthProvider {
+import ua.naiksoftware.android.auth.AuthException;
+import ua.naiksoftware.android.auth.AuthProvider;
+import ua.naiksoftware.android.auth.AuthType;
 
+public class FacebookAuthProvider<T> extends AuthProvider<T> {
 
     private CallbackManager mCallbackManager;
     public static final List<String> SCOPE = Arrays.asList("public_profile", "email");
 
     public FacebookAuthProvider(Activity activity, Bundle arg) {
         super(activity, arg);
-    }
-
-    @Override
-    protected void init(Bundle arg) {
-        FacebookSdk.sdkInitialize(mActivity);
+        FacebookSdk.sdkInitialize(getActivity());
         mCallbackManager = CallbackManager.Factory.create();
+        final AuthCallback<T> authCallback = getAuthCallback();
 
         LoginManager.getInstance().registerCallback(mCallbackManager,
                 new FacebookCallback<LoginResult>() {
                     @Override
                     public void onSuccess(LoginResult loginResult) {
                         final AccessToken accessToken = loginResult.getAccessToken();
-                        if (mAuthCallback != null) {
-                            mAuthCallback.onSuccess(accessToken.getToken(), "");
+                        if (authCallback != null) {
+                            authCallback.onSuccess(null, null, accessToken.getToken());
                         }
                     }
 
                     @Override
                     public void onCancel() {
-                        if (mAuthCallback != null) {
-                            mAuthCallback.onCancel();
+                        if (authCallback != null) {
+                            authCallback.onCancel();
                         }
                     }
 
                     @Override
                     public void onError(FacebookException e) {
-                        if (mAuthCallback != null) {
-                            mAuthCallback.onError(e.getMessage());
+                        if (authCallback != null) {
+                            authCallback.onError(new AuthException(e));
                         }
                     }
 
@@ -59,9 +58,13 @@ public class FacebookAuthProvider extends AuthProvider {
     }
 
     @Override
+    protected AuthType getType() {
+        return AuthType.FACEBOOK;
+    }
+
+    @Override
     public void login() {
-        LoginManager.getInstance().logInWithReadPermissions(mActivity,
-                SCOPE);
+        LoginManager.getInstance().logInWithReadPermissions(getActivity(), SCOPE);
     }
 
     @Override
@@ -72,5 +75,9 @@ public class FacebookAuthProvider extends AuthProvider {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         mCallbackManager.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    protected void cancel() {
     }
 }
