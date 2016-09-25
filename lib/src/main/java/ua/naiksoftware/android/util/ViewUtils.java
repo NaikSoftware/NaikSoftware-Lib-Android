@@ -8,6 +8,8 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.AttrRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.widget.GridLayoutManager;
@@ -148,5 +150,13 @@ public class ViewUtils {
             return ((GridLayoutManager) layoutManager).findFirstCompletelyVisibleItemPosition();
 
         throw new IllegalArgumentException("RecyclerView use unsupported LayoutManager: " + layoutManager.getClass().getName());
+    }
+
+    public static void snackBar(int stringResId, View parent) {
+        Snackbar.make(parent, stringResId, Snackbar.LENGTH_LONG).show();
+    }
+
+    public static void snackBar(String message, View parent) {
+        Snackbar.make(parent, message, Snackbar.LENGTH_LONG).show();
     }
 }

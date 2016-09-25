@@ -5,6 +5,9 @@ import android.support.v7.widget.RecyclerView;
 
 import ua.naiksoftware.android.util.ViewUtils;
 
+import static ua.naiksoftware.android.util.LogHelper.LOGD;
+import static ua.naiksoftware.android.util.LogHelper.makeLogTag;
+
 /**
  * Created by naik on 22.04.16.
  */

@@ -1,4 +1,4 @@
-package ua.naiksoftware.android.util.binding;
+package ua.naiksoftware.android.util;
 
 import android.databinding.BindingAdapter;
 import android.databinding.BindingConversion;
@@ -11,6 +11,9 @@ import android.widget.Filterable;
 import android.widget.ListAdapter;
 
 import java.util.concurrent.atomic.AtomicLong;
+
+import ua.naiksoftware.android.adapter.actionhandler.listener.ActionClickListener;
+import ua.naiksoftware.android.adapter.util.ListConfig;
 
 /**
  * Created by naik on 3/14/16.
@@ -35,6 +38,53 @@ public class Converters {
     @BindingAdapter({"listConfig"})
     public static void configRecyclerView(RecyclerView recyclerView, ListConfig config) {
         config.applyConfig(recyclerView);
+    }
+
+    /**
+     * Binding adapter to assign an action to a view using android data binding approach.
+     * Sample:
+     * <pre>
+     * &lt;Button
+     *     android:layout_width="wrap_content"
+     *     android:layout_height="wrap_content"
+     *
+     *     android:actionHandler="@{someActionHandler}"
+     *     android:actionType='@{"send_message"}'
+     *     android:actionTypeLongClick='@{"show_menu"}'
+     *     android:model="@{user}"
+     *
+     *     android:text="@string/my_button_text"/&gt;
+     * </pre>
+     *
+     * @param view                The View to bind an action
+     * @param actionHandler       The action handler which will handle an action
+     * @param actionType          The action type, which will be handled on view clicked
+     * @param actionTypeLongClick The action type, which will be handled on view long clicked
+     * @param model               The model which will be handled
+     */
+    @BindingAdapter(
+            value = {"actionHandler", "actionType", "actionTypeLongClick", "model", "modelLongClick"},
+            requireAll = false
+    )
+    public static void setActionHandler(final View view, final ActionClickListener actionHandler, final String actionType, final String actionTypeLongClick, final Object model, final Object modelLongClick) {
+        if (actionHandler != null) {
+            if (actionType != null) {
+                view.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        actionHandler.onActionClick(view, actionType, model);
+                    }
+                });
+            }
+
+            if (actionTypeLongClick != null) {
+                view.setOnLongClickListener(new View.OnLongClickListener() {
+                    public boolean onLongClick(View v) {
+                        actionHandler.onActionClick(view, actionTypeLongClick, modelLongClick != null ? modelLongClick : model);
+                        return true;
+                    }
+                });
+            }
+        }
     }
 
     @BindingAdapter(value = {"delayMillis", "longTouchListener"}, requireAll = false)

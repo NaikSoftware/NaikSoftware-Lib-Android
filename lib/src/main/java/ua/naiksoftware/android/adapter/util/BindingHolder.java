@@ -1,9 +1,9 @@
 package ua.naiksoftware.android.adapter.util;
 
+import android.content.Context;
 import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
 import android.support.annotation.LayoutRes;
-import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,13 +14,11 @@ import android.view.ViewGroup;
  */
 public class BindingHolder<VB extends ViewDataBinding> extends RecyclerView.ViewHolder {
 
-    private VB binding;
+    private final VB binding;
 
-    public static <VB extends ViewDataBinding> BindingHolder<VB> newInstance(
-            @LayoutRes int layoutId, LayoutInflater inflater,
-            @Nullable ViewGroup parent, boolean attachToParent) {
-
-        VB vb = DataBindingUtil.inflate(inflater, layoutId, parent, attachToParent);
+    public static <VB extends ViewDataBinding> BindingHolder<VB> newInstance(@LayoutRes int layoutId, ViewGroup parent) {
+        Context context = parent.getContext();
+        VB vb = DataBindingUtil.inflate(LayoutInflater.from(context), layoutId, parent, false);
         return new BindingHolder<>(vb);
     }
 
@@ -31,7 +29,7 @@ public class BindingHolder<VB extends ViewDataBinding> extends RecyclerView.View
 
     /**
      * Do not use in lists, may cause delay binding
-     * @param view
+     * @param view view to bind
      */
     public BindingHolder(View view) {
         super(view);

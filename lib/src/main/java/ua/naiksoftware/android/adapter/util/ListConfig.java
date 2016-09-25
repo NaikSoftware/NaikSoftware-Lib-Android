@@ -8,11 +8,11 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.helper.ItemTouchHelper;
 
-import com.riversoft.core.R;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import ua.naiksoftware.android.R;
 
 /**
  * Helper class for simple configuring Adapter for RecyclerView
@@ -26,15 +26,15 @@ public class ListConfig {
     private final ItemTouchHelper mItemTouchHelper;
     private final boolean mHasFixedSize;
 
-    public ListConfig(RecyclerView.Adapter _adapter, LayoutManagerProvider _layoutManagerProvider, List<RecyclerView.ItemDecoration> _itemDecorations, List<RecyclerView.OnScrollListener> _scrollListeners, ItemTouchHelper itemTouchHelper, boolean _hasFixedSize) {
-        mAdapter = _adapter;
-        mLayoutManagerProvider = _layoutManagerProvider;
-        mItemDecorations = _itemDecorations != null
-                ? _itemDecorations : Collections.<RecyclerView.ItemDecoration>emptyList();
-        mScrollListeners = _scrollListeners != null
-                ? _scrollListeners : Collections.<RecyclerView.OnScrollListener>emptyList();
+    public ListConfig(RecyclerView.Adapter adapter, LayoutManagerProvider layoutManagerProvider, List<RecyclerView.ItemDecoration> itemDecorations, List<RecyclerView.OnScrollListener> scrollListeners, ItemTouchHelper itemTouchHelper, boolean hasFixedSize) {
+        mAdapter = adapter;
+        mLayoutManagerProvider = layoutManagerProvider;
+        mItemDecorations = itemDecorations != null
+                ? itemDecorations : Collections.<RecyclerView.ItemDecoration>emptyList();
+        mScrollListeners = scrollListeners != null
+                ? scrollListeners : Collections.<RecyclerView.OnScrollListener>emptyList();
         mItemTouchHelper = itemTouchHelper;
-        mHasFixedSize = _hasFixedSize;
+        mHasFixedSize = hasFixedSize;
     }
 
     public void applyConfig(RecyclerView recyclerView) {
@@ -58,6 +58,7 @@ public class ListConfig {
     }
 
     public static class Builder {
+
         private final RecyclerView.Adapter mAdapter;
         private LayoutManagerProvider mLayoutManagerProvider;
         private List<RecyclerView.ItemDecoration> mItemDecorations;
@@ -66,8 +67,8 @@ public class ListConfig {
         private boolean mHasFixedSize;
         private int mDefaultDividerOffset = -1;
 
-        public Builder(RecyclerView.Adapter _adapter) {
-            mAdapter = _adapter;
+        public Builder(RecyclerView.Adapter adapter) {
+            mAdapter = adapter;
         }
 
         public Builder setLayoutManagerProvider(LayoutManagerProvider layoutManagerProvider) {
@@ -75,34 +76,34 @@ public class ListConfig {
             return this;
         }
 
-        public Builder addItemDecoration(RecyclerView.ItemDecoration _itemDecoration) {
+        public Builder addItemDecoration(RecyclerView.ItemDecoration itemDecoration) {
             if (mItemDecorations == null) {
                 mItemDecorations = new ArrayList<>();
             }
-            mItemDecorations.add(_itemDecoration);
+            mItemDecorations.add(itemDecoration);
             return this;
         }
 
-        public Builder addOnScrollListener(RecyclerView.OnScrollListener _onScrollListener) {
+        public Builder addOnScrollListener(RecyclerView.OnScrollListener onScrollListener) {
             if (mOnScrollListeners == null) {
                 mOnScrollListeners = new ArrayList<>();
             }
-            mOnScrollListeners.add(_onScrollListener);
+            mOnScrollListeners.add(onScrollListener);
             return this;
         }
 
-        public Builder setHasFixedSize(boolean _isFixedSize) {
-            mHasFixedSize = _isFixedSize;
+        public Builder setHasFixedSize(boolean isFixedSize) {
+            mHasFixedSize = isFixedSize;
             return this;
         }
 
-        public Builder setDefaultDividerEnabled(boolean _isEnabled) {
-            mDefaultDividerOffset = _isEnabled ? 0 : -1;
+        public Builder setDefaultDividerEnabled(boolean isEnabled) {
+            mDefaultDividerOffset = isEnabled ? 0 : -1;
             return this;
         }
 
-        public Builder setDefaultDividerOffset(int _offset) {
-            mDefaultDividerOffset = _offset;
+        public Builder setDefaultDividerOffset(int offset) {
+            mDefaultDividerOffset = offset;
             return this;
         }
 
@@ -115,7 +116,7 @@ public class ListConfig {
             if (mLayoutManagerProvider == null) mLayoutManagerProvider = new SimpleLinearLayoutManagerProvider();
             if (mDefaultDividerOffset >= 0) {
                 if (mDefaultDividerOffset == 0) mDefaultDividerOffset = context.getResources()
-                        .getDimensionPixelSize(R.dimen.loading_list_divider_size);
+                        .getDimensionPixelSize(R.dimen.list_divider_size);
                 addItemDecoration(new DividerItemDecoration(mDefaultDividerOffset));
             }
             return new ListConfig(

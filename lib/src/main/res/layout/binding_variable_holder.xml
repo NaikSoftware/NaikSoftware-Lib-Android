@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+        <variable
+            name="actionHandler"
+            type="ua.naiksoftware.android.adapter.actionhandler.listener.ActionClickListener"/>
+    </data>
+
+    <View
+        android:layout_width="0px"
+        android:layout_height="0px"/>
+</layout>
