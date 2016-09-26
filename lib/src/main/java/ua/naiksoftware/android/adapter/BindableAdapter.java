@@ -16,11 +16,19 @@ public class BindableAdapter<T> extends BaseBindableAdapter<List<T>> {
         super(new ArrayList<T>());
     }
 
+    public BindableAdapter(AdapterDelegate... delegates) {
+        super(new ArrayList<T>(), delegates);
+    }
+
     public BindableAdapter(List<AdapterDelegate> delegates) {
         super(new ArrayList<T>(), delegates);
     }
 
     public BindableAdapter(List<T> mDataSet, List<AdapterDelegate> delegates) {
+        super(mDataSet, delegates);
+    }
+
+    public BindableAdapter(List<T> mDataSet, AdapterDelegate... delegates) {
         super(mDataSet, delegates);
     }
 
