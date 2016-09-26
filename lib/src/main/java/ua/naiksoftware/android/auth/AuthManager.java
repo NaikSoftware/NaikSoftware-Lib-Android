@@ -28,6 +28,7 @@ public class AuthManager<T> {
     public static final String ARG_PASSWORD = "arg_password";
 
     private static AuthManager INSTANCE;
+
     private Subscription mGetMyUserSubscription;
 
     private AuthManager() {
@@ -180,7 +181,11 @@ public class AuthManager<T> {
     }
 
     private void callMyUserRequest(final String login, final String password, final String socialAuthToken, final AuthType authType) {
-        LogHelper.LOGD(TAG, "Start call to server...");
+        if (mGetMyUserSubscription != null && !mGetMyUserSubscription.isUnsubscribed()) {
+            LogHelper.LOGD(TAG, "Cancel previous get my user request");
+            mGetMyUserSubscription.unsubscribe();
+        }
+        LogHelper.LOGD(TAG, "Start get my user request...");
         mGetMyUserSubscription = mGetMyUserRequestProvider.getGetMyUserRequest(login, password, socialAuthToken, authType)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
