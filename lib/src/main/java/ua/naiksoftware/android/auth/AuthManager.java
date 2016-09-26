@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 
 import rx.Observable;
 import rx.Subscriber;
+import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import ua.naiksoftware.android.auth.provider.FacebookAuthProvider;
@@ -27,6 +28,7 @@ public class AuthManager<T> {
     public static final String ARG_PASSWORD = "arg_password";
 
     private static AuthManager INSTANCE;
+    private Subscription mGetMyUserSubscription;
 
     private AuthManager() {
     }
@@ -68,6 +70,7 @@ public class AuthManager<T> {
      */
     public void onDestroy() {
         if (mAuthProvider != null) mAuthProvider.cancel();
+        if (mGetMyUserSubscription != null) mGetMyUserSubscription.unsubscribe();
     }
 
     public boolean isProcessing() {
@@ -178,7 +181,7 @@ public class AuthManager<T> {
 
     private void callMyUserRequest(final String login, final String password, final String socialAuthToken, final AuthType authType) {
         LogHelper.LOGD(TAG, "Start call to server...");
-        mGetMyUserRequestProvider.getGetMyUserRequest(login, password, socialAuthToken, authType)
+        mGetMyUserSubscription = mGetMyUserRequestProvider.getGetMyUserRequest(login, password, socialAuthToken, authType)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<T>() {
