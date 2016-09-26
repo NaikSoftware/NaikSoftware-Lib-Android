@@ -3,6 +3,7 @@ package ua.naiksoftware.android.adapter;
 import android.support.v7.widget.RecyclerView;
 import android.view.ViewGroup;
 
+import java.util.Arrays;
 import java.util.List;
 
 import ua.naiksoftware.android.adapter.delegate.AdapterDelegate;
@@ -10,46 +11,39 @@ import ua.naiksoftware.android.adapter.util.AdapterDelegatesManager;
 
 /**
  * RecyclerView Adapter for using with data binding
- * Created by roman.donchenko on 05.04.2016
  */
 public abstract class BaseBindableAdapter<T> extends RecyclerView.Adapter {
 
 
-    protected T mDataSet;
-    protected AdapterDelegatesManager<T> mDelegatesManager;
+    private T mDataSet;
+    private AdapterDelegatesManager<T> mDelegatesManager;
 
     public BaseBindableAdapter() {
     }
 
-    public BaseBindableAdapter(AdapterDelegatesManager<T> mDelegatesManager) {
-        this.mDelegatesManager = mDelegatesManager;
-    }
-
     public BaseBindableAdapter(List<AdapterDelegate> delegates) {
-        mDelegatesManager = new AdapterDelegatesManager<>();
-        mDelegatesManager.addDelegates(delegates);
+
     }
 
-    public BaseBindableAdapter(T mDataSet, AdapterDelegatesManager<T> delegatesManager) {
-        this(delegatesManager);
-        this.mDataSet = mDataSet;
+    public BaseBindableAdapter(AdapterDelegate... delegates) {
+       this(Arrays.asList(delegates));
     }
 
-    public BaseBindableAdapter(T mDataSet, List<AdapterDelegate> delegates) {
+    public BaseBindableAdapter(T dataSet, List<AdapterDelegate> delegates) {
         this(delegates);
-        this.mDataSet = mDataSet;
+        this.mDataSet = dataSet;
     }
 
-    /**
-     * Update list
-     */
-    public void setDataSet(T mDataSet) {
-        this.mDataSet = mDataSet;
-        dataChanged();
+    public BaseBindableAdapter(T dataSet, AdapterDelegate... delegates) {
+        this(dataSet, Arrays.asList(delegates));
+    }
+    
+    public void setDataSet(T dataSet) {
+        mDataSet = dataSet;
     }
 
-    protected void dataChanged() {
-
+    public T getDataSet() {
+        return mDataSet;
     }
 
     @Override
