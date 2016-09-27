@@ -41,6 +41,10 @@ dependencies {
     provided 'io.reactivex:rxjava:1.2.0'
     provided 'io.reactivex:rxandroid:1.2.1'
     provided 'net.danlew:android.joda:2.9.4.1'
+    provided 'com.squareup.retrofit2:retrofit:2.1.0'
+    provided 'com.squareup.retrofit2:adapter-rxjava:2.1.0'
+    provided 'com.squareup.retrofit2:converter-gson:2.1.0'
+    provided 'com.squareup.okhttp3:logging-interceptor:3.4.1'
     compile('com.hannesdorfmann:adapterdelegates2:2.0.1') {
         exclude group: 'com.android.support'
     }
