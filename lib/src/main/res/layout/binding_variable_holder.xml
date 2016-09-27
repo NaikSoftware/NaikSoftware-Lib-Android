@@ -5,6 +5,9 @@
         <variable
             name="actionHandler"
             type="ua.naiksoftware.android.adapter.actionhandler.listener.ActionClickListener"/>
+        <variable
+            name="model"
+            type="ua.naiksoftware.android.model.Model"/>
     </data>
 
     <View
