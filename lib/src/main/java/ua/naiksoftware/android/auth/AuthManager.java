@@ -50,20 +50,12 @@ public class AuthManager<T> {
     }
 
     public interface LoginCallback<T> {
-
-        /**
-         * Called when user received from you server
-         */
+        
         void onSuccess(T user);
 
         void onFailed(Throwable message);
 
         void onCancel();
-
-        /**
-         * Called when user fetched from other service (Google, Facebook, Vk, etc)
-         */
-        void onThirdPartyUserReceived(String email, String username, String accessToken);
     }
 
     /**
@@ -121,7 +113,6 @@ public class AuthManager<T> {
                 @Override
                 public void onSuccess(String email, String user, String accessToken) {
                     LogHelper.LOGD(TAG, "Social Access Token received: " + accessToken);
-                    loginCallback.onThirdPartyUserReceived(email, user, accessToken);
                     callMyUserRequest(email, null, accessToken, authType);
                 }
 
