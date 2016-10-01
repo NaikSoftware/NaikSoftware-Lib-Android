@@ -25,7 +25,7 @@ public abstract class ActionAdapterDelegate<T, VB extends ViewDataBinding> exten
      */
     @CallSuper
     @Override
-    public void onBindViewHolder(@NonNull T items, int position, @NonNull BindingHolder<VB> holder) {
+    public void bindHolder(@NonNull T items, int position, @NonNull BindingHolder<VB> holder) {
         holder.getBinding().setVariable(BR.actionHandler, mActionHandler);
     }
 }

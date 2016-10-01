@@ -19,12 +19,8 @@ public class SimpleViewHolder extends RecyclerView.ViewHolder {
 
     private final SparseArray<View> mViewSparseArray = new SparseArray<>();
 
-    public SimpleViewHolder(View itemView) {
-        super(itemView);
-    }
-
-    public SimpleViewHolder(@LayoutRes int itemLayout, ViewGroup parent) {
-        super(LayoutInflater.from(parent.getContext()).inflate(itemLayout, parent, false));
+    public SimpleViewHolder(@LayoutRes int itemLayout, ViewGroup parent, LayoutInflater layoutInflater) {
+        super(layoutInflater.inflate(itemLayout, parent, false));
     }
 
     public SimpleViewHolder useView(@IdRes int viewId) {

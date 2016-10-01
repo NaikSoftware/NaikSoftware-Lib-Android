@@ -16,9 +16,8 @@ public class BindingHolder<VB extends ViewDataBinding> extends RecyclerView.View
 
     private final VB binding;
 
-    public static <VB extends ViewDataBinding> BindingHolder<VB> newInstance(@LayoutRes int layoutId, ViewGroup parent) {
-        Context context = parent.getContext();
-        VB vb = DataBindingUtil.inflate(LayoutInflater.from(context), layoutId, parent, false);
+    public static <VB extends ViewDataBinding> BindingHolder<VB> newInstance(@LayoutRes int layoutId, LayoutInflater inflater, ViewGroup parent) {
+        VB vb = DataBindingUtil.inflate(inflater, layoutId, parent, false);
         return new BindingHolder<>(vb);
     }
 

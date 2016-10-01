@@ -5,9 +5,11 @@ public class ObjectUtils {
     public static class Classpath {
 
         public static boolean RETROFIT_RX_ADAPTER;
+        public static boolean APP_COMPAT;
 
         static {
             RETROFIT_RX_ADAPTER = ObjectUtils.classExists("retrofit2.adapter.rxjava.Result");
+            APP_COMPAT = ObjectUtils.classExists("android.support.v7.app.AppCompatActivity");
         }
     }
 
