@@ -4,31 +4,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.naiksoftware.android.adapter.delegate.AdapterDelegate;
-import ua.naiksoftware.android.adapter.util.AdapterDelegatesManager;
 
 /**
- * RecyclerView Adapter for using with data binding
+ * RecyclerView Adapter for using with lists
  */
-public class BindableAdapter<T> extends BaseBindableAdapter<List<T>> {
+public class DelegatesAdapter<T> extends BaseDelegatesAdapter<List<T>> {
 
 
-    public BindableAdapter() {
+    public DelegatesAdapter() {
         super(new ArrayList<T>());
     }
 
-    public BindableAdapter(AdapterDelegate... delegates) {
+    public DelegatesAdapter(AdapterDelegate... delegates) {
         super(new ArrayList<T>(), delegates);
     }
 
-    public BindableAdapter(List<AdapterDelegate> delegates) {
+    public DelegatesAdapter(List<AdapterDelegate> delegates) {
         super(new ArrayList<T>(), delegates);
     }
 
-    public BindableAdapter(List<T> mDataSet, List<AdapterDelegate> delegates) {
+    public DelegatesAdapter(List<T> mDataSet, List<AdapterDelegate> delegates) {
         super(mDataSet, delegates);
     }
 
-    public BindableAdapter(List<T> mDataSet, AdapterDelegate... delegates) {
+    public DelegatesAdapter(List<T> mDataSet, AdapterDelegate... delegates) {
         super(mDataSet, delegates);
     }
 

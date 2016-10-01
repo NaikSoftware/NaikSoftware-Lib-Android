@@ -10,31 +10,32 @@ import ua.naiksoftware.android.adapter.delegate.AdapterDelegate;
 import ua.naiksoftware.android.adapter.util.AdapterDelegatesManager;
 
 /**
- * RecyclerView Adapter for using with data binding
+ * RecyclerView Adapter for using with any data types
  */
-public abstract class BaseBindableAdapter<T> extends RecyclerView.Adapter {
+public abstract class BaseDelegatesAdapter<T> extends RecyclerView.Adapter {
 
 
     private T mDataSet;
     private AdapterDelegatesManager<T> mDelegatesManager;
 
-    public BaseBindableAdapter() {
+    public BaseDelegatesAdapter() {
     }
 
-    public BaseBindableAdapter(List<AdapterDelegate> delegates) {
-
+    public BaseDelegatesAdapter(List<AdapterDelegate> delegates) {
+        mDelegatesManager = new AdapterDelegatesManager<>();
+        mDelegatesManager.addDelegates(delegates);
     }
 
-    public BaseBindableAdapter(AdapterDelegate... delegates) {
+    public BaseDelegatesAdapter(AdapterDelegate... delegates) {
        this(Arrays.asList(delegates));
     }
 
-    public BaseBindableAdapter(T dataSet, List<AdapterDelegate> delegates) {
+    public BaseDelegatesAdapter(T dataSet, List<AdapterDelegate> delegates) {
         this(delegates);
         this.mDataSet = dataSet;
     }
 
-    public BaseBindableAdapter(T dataSet, AdapterDelegate... delegates) {
+    public BaseDelegatesAdapter(T dataSet, AdapterDelegate... delegates) {
         this(dataSet, Arrays.asList(delegates));
     }
     
