@@ -8,7 +8,7 @@ import ua.naiksoftware.android.adapter.delegate.AdapterDelegate;
 /**
  * RecyclerView Adapter for using with lists
  */
-public class DelegatesAdapter<T> extends BaseDelegatesAdapter<List<T>> {
+public class DelegatesAdapter<T> extends BaseDelegatesAdapter<List<? extends T>> {
 
 
     public DelegatesAdapter() {
@@ -23,17 +23,17 @@ public class DelegatesAdapter<T> extends BaseDelegatesAdapter<List<T>> {
         super(new ArrayList<T>(), delegates);
     }
 
-    public DelegatesAdapter(List<T> mDataSet, List<AdapterDelegate> delegates) {
+    public DelegatesAdapter(List<? extends T> mDataSet, List<AdapterDelegate> delegates) {
         super(mDataSet, delegates);
     }
 
-    public DelegatesAdapter(List<T> mDataSet, AdapterDelegate... delegates) {
+    public DelegatesAdapter(List<? extends T> mDataSet, AdapterDelegate... delegates) {
         super(mDataSet, delegates);
     }
 
     @Override
     public int getItemCount() {
-        List<T> dataSet = getDataSet();
+        List<? extends T> dataSet = getDataSet();
         return dataSet == null ? 0 : dataSet.size();
     }
 }
