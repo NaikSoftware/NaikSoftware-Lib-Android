@@ -1,9 +1,12 @@
 package ua.naiksoftware.android.adapter.util;
 
 import android.support.annotation.IdRes;
+import android.support.annotation.LayoutRes;
 import android.support.v7.widget.RecyclerView;
 import android.util.SparseArray;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 
 import ua.naiksoftware.android.adapter.actionhandler.listener.ActionClickListener;
 
@@ -15,15 +18,17 @@ import ua.naiksoftware.android.adapter.actionhandler.listener.ActionClickListene
 public class SimpleViewHolder extends RecyclerView.ViewHolder {
 
     private final SparseArray<View> mViewSparseArray = new SparseArray<>();
-    private final View mRootView;
 
     public SimpleViewHolder(View itemView) {
         super(itemView);
-        mRootView = itemView;
+    }
+
+    public SimpleViewHolder(@LayoutRes int itemLayout, ViewGroup parent) {
+        super(LayoutInflater.from(parent.getContext()).inflate(itemLayout, parent, false));
     }
 
     public SimpleViewHolder useView(@IdRes int viewId) {
-        View v = mRootView.findViewById(viewId);
+        View v = itemView.findViewById(viewId);
         if (v == null) {
             throw new IllegalArgumentException("View with id=" + viewId
 											   + " not found in this ViewHolder root view");
