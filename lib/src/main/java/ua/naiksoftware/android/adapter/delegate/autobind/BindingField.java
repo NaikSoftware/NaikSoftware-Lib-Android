@@ -16,5 +16,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface BindingField {
 
-    @IdRes int id();
+    @IdRes int value();
 }

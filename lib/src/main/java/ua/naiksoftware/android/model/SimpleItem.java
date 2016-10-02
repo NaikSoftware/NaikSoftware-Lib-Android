@@ -47,7 +47,7 @@ public class SimpleItem<T> implements BaseModel {
     }
 
     @Override
-    public Long getId() {
+    public long getId() {
         return id;
     }
 }

@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface DrawableRes {
+public @interface DrawableId {
 
-    @IdRes int id();
+    @IdRes int value();
 }

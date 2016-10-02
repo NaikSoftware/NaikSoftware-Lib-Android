@@ -16,7 +16,7 @@ import java.util.Map;
 
 import ua.naiksoftware.android.adapter.actionhandler.listener.ActionClickListener;
 import ua.naiksoftware.android.adapter.delegate.autobind.BindingField;
-import ua.naiksoftware.android.adapter.delegate.autobind.DrawableRes;
+import ua.naiksoftware.android.adapter.delegate.autobind.DrawableId;
 import ua.naiksoftware.android.adapter.delegate.autobind.Text;
 import ua.naiksoftware.android.adapter.util.SimpleViewHolder;
 import ua.naiksoftware.android.model.BaseModel;
@@ -102,15 +102,15 @@ public class ModelDelegate extends BaseAdapterDelegate<BaseModel> {
                     field.setAccessible(true);
                     Text annotation = field.getAnnotation(Text.class);
                     fields.put(field, annotation);
-                    holder.findView(annotation.id());
-                } else if (field.isAnnotationPresent(DrawableRes.class)) {
+                    holder.findView(annotation.value());
+                } else if (field.isAnnotationPresent(DrawableId.class)) {
                     field.setAccessible(true);
-                    DrawableRes annotation = field.getAnnotation(DrawableRes.class);
+                    DrawableId annotation = field.getAnnotation(DrawableId.class);
                     fields.put(field, annotation);
-                    holder.findView(annotation.id());
+                    holder.findView(annotation.value());
                 } else if (field.isAnnotationPresent(BindingField.class)) {
                     // Find view for use in custom binding method
-                    holder.findView(field.getAnnotation(BindingField.class).id());
+                    holder.findView(field.getAnnotation(BindingField.class).value());
                 }
             }
             mFieldsMapping.put(modelClass, fields);
@@ -124,10 +124,10 @@ public class ModelDelegate extends BaseAdapterDelegate<BaseModel> {
                 Annotation annotation = entry.getValue();
                 Class<? extends Annotation> fieldType = annotation.getClass();
                 if (fieldType == Text.class) {
-                    TextView view = holder.getView(((Text) annotation).id());
+                    TextView view = holder.getView(((Text) annotation).value());
                     view.setText((CharSequence) field.get(model));
-                } else if (fieldType == DrawableRes.class) {
-                    ImageView view = holder.getView(((DrawableRes) annotation).id());
+                } else if (fieldType == DrawableId.class) {
+                    ImageView view = holder.getView(((DrawableId) annotation).value());
                     view.setImageResource((int) field.get(model));
                 }
             }
