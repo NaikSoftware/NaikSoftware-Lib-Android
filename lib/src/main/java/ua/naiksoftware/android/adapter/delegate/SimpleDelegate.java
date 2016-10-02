@@ -128,7 +128,7 @@ public class SimpleDelegate extends BaseAdapterDelegate<BaseModel> {
                     view.setText((CharSequence) field.get(model));
                 } else if (fieldType == DrawableId.class) {
                     ImageView view = holder.findAndCache(((DrawableId) annotation).value());
-                    view.setImageResource((int) field.get(model));
+                    view.setImageResource((Integer) field.get(model));
                 }
             }
         } catch (IllegalAccessException e) {
