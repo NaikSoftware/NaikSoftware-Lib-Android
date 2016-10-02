@@ -23,7 +23,7 @@ public class SimpleViewHolder extends RecyclerView.ViewHolder {
         super(layoutInflater.inflate(itemLayout, parent, false));
     }
 
-    public SimpleViewHolder useView(@IdRes int viewId) {
+    public SimpleViewHolder findView(@IdRes int viewId) {
         View v = itemView.findViewById(viewId);
         if (v == null) {
             throw new IllegalArgumentException("View with id=" + viewId
@@ -37,7 +37,7 @@ public class SimpleViewHolder extends RecyclerView.ViewHolder {
         T view = (T) mViewSparseArray.get(viewId);
         if (view == null) {
             throw new IllegalArgumentException("View with id=" + viewId
-											   + " not found, try call useView(viewId) before");
+											   + " not found, try call findView(viewId) before");
         }
         return view;
     }

@@ -30,6 +30,7 @@ public abstract class BaseAdapterDelegate<T> implements AdapterDelegate<List<T>>
      * <b>WARNING:</b> pass Activity as context for inflate support library widgets
      */
     public BaseAdapterDelegate(ActionClickListener actionHandler, Context context) {
+        if (actionHandler == null || context == null) return;
         mLayoutInflater = LayoutInflater.from(context).cloneInContext(context);
 
         if (ObjectUtils.Classpath.APP_COMPAT) {
@@ -60,7 +61,9 @@ public abstract class BaseAdapterDelegate<T> implements AdapterDelegate<List<T>>
 
     @Override
     public void onBindViewHolder(@NonNull List<T> items, int position, @NonNull RecyclerView.ViewHolder holder) {
-        mItemViewsFactory.setActionModel(holder.itemView, items.get(position));
+        if (mItemViewsFactory != null) {
+            mItemViewsFactory.setActionModel(holder.itemView, items.get(position));
+        }
         bindHolder(items, position, (SimpleViewHolder) holder);
     }
 

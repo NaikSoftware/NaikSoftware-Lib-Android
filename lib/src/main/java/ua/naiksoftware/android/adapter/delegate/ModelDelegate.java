@@ -1,13 +1,23 @@
 package ua.naiksoftware.android.adapter.delegate;
 
+import android.content.Context;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import ua.naiksoftware.android.adapter.actionhandler.listener.ActionClickListener;
+import ua.naiksoftware.android.adapter.delegate.autobind.BindingField;
+import ua.naiksoftware.android.adapter.delegate.autobind.DrawableRes;
+import ua.naiksoftware.android.adapter.delegate.autobind.Text;
 import ua.naiksoftware.android.adapter.util.SimpleViewHolder;
 import ua.naiksoftware.android.model.BaseModel;
 import ua.naiksoftware.android.model.SimpleItem;
@@ -20,18 +30,21 @@ public class ModelDelegate extends BaseAdapterDelegate<BaseModel> {
 
     private final int mItemLayoutResId;
     private final ViewTypeClause mViewTypeClause;
-    private final ActionClickListener mActionHandler;
+    private final Map<Class<? extends BaseModel>, Map<Field, Annotation>> mFieldsMapping = new HashMap<>();
 
     public ModelDelegate(@NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId) {
         this(itemLayoutResId, new SimpleViewTypeClause(modelClass));
     }
 
     public ModelDelegate(@LayoutRes int itemLayoutResId, ViewTypeClause viewTypeClause) {
-        this(itemLayoutResId, null, viewTypeClause);
+        this(null, null, viewTypeClause, itemLayoutResId);
     }
 
-    public ModelDelegate(ActionClickListener actionHandler, @NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId) {
-        this(itemLayoutResId, actionHandler, new SimpleViewTypeClause(modelClass));
+    /**
+     * If you use support-library you must pass Activity as context
+     */
+    public ModelDelegate(Context context, ActionClickListener actionHandler, @NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId) {
+        this(context, actionHandler, new SimpleViewTypeClause(modelClass), itemLayoutResId);
     }
 
     /**
@@ -46,18 +59,19 @@ public class ModelDelegate extends BaseAdapterDelegate<BaseModel> {
 
     /**
      * Delegate for using with SimpleItem model and ActionHandler
+     * If you use support-library you must pass Activity as context
      *
      * @param itemTypeTag type to react to {@link SimpleItem} with this type in data set
      * @param itemLayoutResId layout for item
      */
-    public ModelDelegate(ActionClickListener actionHandler, int itemTypeTag, @LayoutRes int itemLayoutResId) {
-        this(itemLayoutResId, actionHandler, new SimpleItemViewTypeClause(SimpleItem.class, itemTypeTag));
+    public ModelDelegate(Context context, ActionClickListener actionHandler, int itemTypeTag, @LayoutRes int itemLayoutResId) {
+        this(context, actionHandler, new SimpleItemViewTypeClause(SimpleItem.class, itemTypeTag), itemLayoutResId);
     }
 
-    public ModelDelegate(@LayoutRes int itemLayoutResId, ActionClickListener actionHandler, ViewTypeClause viewTypeClause) {
+    public ModelDelegate(Context context, ActionClickListener actionHandler, ViewTypeClause viewTypeClause, @LayoutRes int itemLayoutResId) {
+        super(actionHandler, context);
         mItemLayoutResId = itemLayoutResId;
         mViewTypeClause = viewTypeClause;
-        mActionHandler = actionHandler;
     }
 
     @Override
@@ -70,20 +84,56 @@ public class ModelDelegate extends BaseAdapterDelegate<BaseModel> {
         return dataSource.get(position).getId();
     }
 
-    protected ActionClickListener getActionHandler() {
-        return mActionHandler;
-    }
-
     @NonNull
     @Override
     public SimpleViewHolder createHolder(LayoutInflater inflater, ViewGroup parent) {
-        // TODO: 01.10.16 Find view by ids (read from annotations)
         return new SimpleViewHolder(mItemLayoutResId, parent, inflater);
     }
 
     @Override
     public void bindHolder(@NonNull List<BaseModel> items, int position, @NonNull SimpleViewHolder holder) {
-        // TODO: 01.10.16 Bind ids from model (parse annotations)
+        BaseModel model = items.get(position);
+        Class<? extends BaseModel> modelClass = model.getClass();
+        Map<Field, Annotation> fields;
+        if (!mFieldsMapping.containsKey(modelClass)) {
+            fields = new HashMap<>();
+            for (Field field : modelClass.getDeclaredFields()) {
+                if (field.isAnnotationPresent(Text.class)) {
+                    field.setAccessible(true);
+                    Text annotation = field.getAnnotation(Text.class);
+                    fields.put(field, annotation);
+                    holder.findView(annotation.id());
+                } else if (field.isAnnotationPresent(DrawableRes.class)) {
+                    field.setAccessible(true);
+                    DrawableRes annotation = field.getAnnotation(DrawableRes.class);
+                    fields.put(field, annotation);
+                    holder.findView(annotation.id());
+                } else if (field.isAnnotationPresent(BindingField.class)) {
+                    // Find view for use in custom binding method
+                    holder.findView(field.getAnnotation(BindingField.class).id());
+                }
+            }
+            mFieldsMapping.put(modelClass, fields);
+        } else {
+            fields = mFieldsMapping.get(modelClass);
+        }
+
+        try {
+            for (Map.Entry<Field, Annotation> entry : fields.entrySet()) {
+                Field field = entry.getKey();
+                Annotation annotation = entry.getValue();
+                Class<? extends Annotation> fieldType = annotation.getClass();
+                if (fieldType == Text.class) {
+                    TextView view = holder.getView(((Text) annotation).id());
+                    view.setText((CharSequence) field.get(model));
+                } else if (fieldType == DrawableRes.class) {
+                    ImageView view = holder.getView(((DrawableRes) annotation).id());
+                    view.setImageResource((int) field.get(model));
+                }
+            }
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     public interface ViewTypeClause {
