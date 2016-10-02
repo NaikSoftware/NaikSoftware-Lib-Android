@@ -18,9 +18,11 @@ import ua.naiksoftware.android.adapter.actionhandler.listener.ActionClickListene
 import ua.naiksoftware.android.adapter.delegate.autobind.BindingField;
 import ua.naiksoftware.android.adapter.delegate.autobind.DrawableId;
 import ua.naiksoftware.android.adapter.delegate.autobind.Text;
+import ua.naiksoftware.android.adapter.delegate.viewtype.ClassViewTypeCondition;
+import ua.naiksoftware.android.adapter.delegate.viewtype.SimpleItemViewTypeCondition;
+import ua.naiksoftware.android.adapter.delegate.viewtype.ViewTypeCondition;
 import ua.naiksoftware.android.adapter.util.SimpleViewHolder;
 import ua.naiksoftware.android.model.BaseModel;
-import ua.naiksoftware.android.model.SimpleItem;
 
 /**
  * Delegate for simple items (if you are using data binding
@@ -29,54 +31,58 @@ import ua.naiksoftware.android.model.SimpleItem;
 public class SimpleDelegate extends BaseAdapterDelegate<BaseModel> {
 
     private final int mItemLayoutResId;
-    private final ViewTypeClause mViewTypeClause;
+    private final ViewTypeCondition mViewTypeCondition;
     private final Map<Class<? extends BaseModel>, Map<Field, Annotation>> mFieldsMapping = new HashMap<>();
 
-    public SimpleDelegate(@NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId) {
-        this(itemLayoutResId, new SimpleViewTypeClause(modelClass));
+    public static class Builder {
+
+        private final int mItemLayoutResId;
+        private ViewTypeCondition mViewTypeCondition;
+        private Context mContext = null;
+        private ActionClickListener mActionHandler = null;
+
+        public Builder(int itemLayoutResId) {
+            mItemLayoutResId = itemLayoutResId;
+        }
+
+        public Builder forClass(Class<? extends BaseModel> modelClass) {
+            mViewTypeCondition = new ClassViewTypeCondition(modelClass);
+            return this;
+        }
+
+        public Builder forCondition(ViewTypeCondition viewTypeCondition) {
+            mViewTypeCondition = viewTypeCondition;
+            return this;
+        }
+
+        /**
+         * If you use support-library you must pass Activity as context
+         */
+        public Builder withActionHandler(Context context, ActionClickListener actionHandler) {
+            mContext = context;
+            mActionHandler = actionHandler;
+            return this;
+        }
+
+        public Builder forSimpleItem(int itemTypeTag) {
+            mViewTypeCondition = new SimpleItemViewTypeCondition(itemTypeTag);
+            return this;
+        }
+
+        public SimpleDelegate build() {
+            return new SimpleDelegate(mContext, mActionHandler, mViewTypeCondition, mItemLayoutResId);
+        }
     }
 
-    public SimpleDelegate(@LayoutRes int itemLayoutResId, ViewTypeClause viewTypeClause) {
-        this(null, null, viewTypeClause, itemLayoutResId);
-    }
-
-    /**
-     * If you use support-library you must pass Activity as context
-     */
-    public SimpleDelegate(Context context, ActionClickListener actionHandler, @NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId) {
-        this(context, actionHandler, new SimpleViewTypeClause(modelClass), itemLayoutResId);
-    }
-
-    /**
-     * Delegate for using with SimpleItem model
-     *
-     * @param itemTypeTag type to react to {@link SimpleItem} with this type in data set
-     * @param itemLayoutResId layout for item
-     */
-    public SimpleDelegate(@LayoutRes int itemLayoutResId, int itemTypeTag) {
-        this(itemLayoutResId, new SimpleItemViewTypeClause(SimpleItem.class, itemTypeTag));
-    }
-
-    /**
-     * Delegate for using with SimpleItem model and ActionHandler
-     * If you use support-library you must pass Activity as context
-     *
-     * @param itemTypeTag type to react to {@link SimpleItem} with this type in data set
-     * @param itemLayoutResId layout for item
-     */
-    public SimpleDelegate(Context context, ActionClickListener actionHandler, int itemTypeTag, @LayoutRes int itemLayoutResId) {
-        this(context, actionHandler, new SimpleItemViewTypeClause(SimpleItem.class, itemTypeTag), itemLayoutResId);
-    }
-
-    public SimpleDelegate(Context context, ActionClickListener actionHandler, ViewTypeClause viewTypeClause, @LayoutRes int itemLayoutResId) {
+    public SimpleDelegate(Context context, ActionClickListener actionHandler, ViewTypeCondition viewTypeCondition, @LayoutRes int itemLayoutResId) {
         super(actionHandler, context);
         mItemLayoutResId = itemLayoutResId;
-        mViewTypeClause = viewTypeClause;
+        mViewTypeCondition = viewTypeCondition;
     }
 
     @Override
     public boolean isForViewType(@NonNull List<BaseModel> items, int position) {
-        return mViewTypeClause.isForViewType(items, position);
+        return mViewTypeCondition.isForViewType(items, position);
     }
 
     @Override
@@ -134,39 +140,5 @@ public class SimpleDelegate extends BaseAdapterDelegate<BaseModel> {
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
-    }
-
-    public interface ViewTypeClause {
-        boolean isForViewType(List<?> items, int position);
-
-    }
-
-    private static class SimpleViewTypeClause implements ViewTypeClause {
-
-        private final Class<?> mClass;
-
-        SimpleViewTypeClause(@NonNull Class<?> aClass) {
-            mClass = aClass;
-        }
-        @Override
-        public boolean isForViewType(List<?> items, int position) {
-            return mClass.isAssignableFrom(items.get(position).getClass());
-        }
-
-    }
-
-    private static class SimpleItemViewTypeClause extends SimpleViewTypeClause {
-
-        private final int itemTypeTag;
-
-        SimpleItemViewTypeClause(@NonNull Class<?> aClass, int itemTypeTag) {
-            super(aClass);
-            this.itemTypeTag = itemTypeTag;
-        }
-        @Override
-        public boolean isForViewType(List<?> items, int position) {
-            return super.isForViewType(items, position) && ((SimpleItem) items.get(position)).itemTypeTag == itemTypeTag;
-        }
-
     }
 }

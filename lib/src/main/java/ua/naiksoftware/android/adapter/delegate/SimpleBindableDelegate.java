@@ -1,7 +1,6 @@
 package ua.naiksoftware.android.adapter.delegate;
 
 import android.databinding.ViewDataBinding;
-import android.support.annotation.IdRes;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
@@ -11,9 +10,11 @@ import java.util.List;
 
 import ua.naiksoftware.android.BR;
 import ua.naiksoftware.android.adapter.actionhandler.listener.ActionClickListener;
+import ua.naiksoftware.android.adapter.delegate.viewtype.ClassViewTypeCondition;
+import ua.naiksoftware.android.adapter.delegate.viewtype.SimpleItemViewTypeCondition;
+import ua.naiksoftware.android.adapter.delegate.viewtype.ViewTypeCondition;
 import ua.naiksoftware.android.adapter.util.BindingHolder;
 import ua.naiksoftware.android.model.BaseModel;
-import ua.naiksoftware.android.model.SimpleItem;
 
 /**
  * Delegate for simple items with data-binding
@@ -22,49 +23,50 @@ public class SimpleBindableDelegate extends BaseBindableAdapterDelegate<List<Bas
 
     private final int mModelId;
     private final int mItemLayoutResId;
-    private final ViewTypeClause mViewTypeClause;
+    private final ViewTypeCondition mViewTypeClause;
 
-    public SimpleBindableDelegate(@NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId) {
-        this(itemLayoutResId, 0, new SimpleViewTypeClause(modelClass));
+    public static class Builder {
+
+        private int mItemLayoutResId;
+        private int mModelId = BR.model;
+        private ViewTypeCondition mViewTypeCondition;
+        private ActionClickListener mActionHandler;
+
+        public Builder(int itemLayoutResId) {
+            mItemLayoutResId = itemLayoutResId;
+        }
+
+        public Builder forClass(Class<? extends BaseModel> modelClass) {
+            mViewTypeCondition = new ClassViewTypeCondition(modelClass);
+            return this;
+        }
+
+        public Builder forCondition(ViewTypeCondition viewTypeCondition) {
+            mViewTypeCondition = viewTypeCondition;
+            return this;
+        }
+
+        public Builder forSimpleItem(int itemTypeTag) {
+            mViewTypeCondition = new SimpleItemViewTypeCondition(itemTypeTag);
+            return this;
+        }
+
+        public Builder withActionHandler(ActionClickListener actionHandler) {
+            mActionHandler = actionHandler;
+            return this;
+        }
+
+        public Builder setModelId(int modelId) {
+            mModelId = modelId;
+            return this;
+        }
+
+        public SimpleBindableDelegate build() {
+            return new SimpleBindableDelegate(mItemLayoutResId, mModelId, mActionHandler, mViewTypeCondition);
+        }
     }
 
-    public SimpleBindableDelegate(@NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId, @IdRes int modelId) {
-        this(itemLayoutResId, modelId, new SimpleViewTypeClause(modelClass));
-    }
-
-    public SimpleBindableDelegate(@LayoutRes int itemLayoutResId, int modelId, ViewTypeClause viewTypeClause) {
-        this(itemLayoutResId, modelId, null, viewTypeClause);
-    }
-
-    public SimpleBindableDelegate(ActionClickListener actionHandler, @NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId) {
-        this(actionHandler, modelClass, itemLayoutResId, 0);
-    }
-
-    public SimpleBindableDelegate(ActionClickListener actionHandler, @NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId, int modelId) {
-        this(itemLayoutResId, modelId, actionHandler, new SimpleViewTypeClause(modelClass));
-    }
-
-    /**
-     * Delegate for using with SimpleItem model
-     *
-     * @param itemTypeTag type to react to {@link SimpleItem} with this type in data set
-     * @param itemLayoutResId layout for item
-     */
-    public SimpleBindableDelegate(@LayoutRes int itemLayoutResId, int itemTypeTag) {
-        this(itemLayoutResId, 0, new SimpleItemViewTypeClause(SimpleItem.class, itemTypeTag));
-    }
-
-    /**
-     * Delegate for using with SimpleItem model and ActionHandler
-     *
-     * @param itemTypeTag type to react to {@link SimpleItem} with this type in data set
-     * @param itemLayoutResId layout for item
-     */
-    public SimpleBindableDelegate(ActionClickListener actionHandler, int itemTypeTag, @LayoutRes int itemLayoutResId) {
-        this(itemLayoutResId, 0, actionHandler, new SimpleItemViewTypeClause(SimpleItem.class, itemTypeTag));
-    }
-
-    public SimpleBindableDelegate(@LayoutRes int itemLayoutResId, int modelId, ActionClickListener actionHandler, ViewTypeClause viewTypeClause) {
+    public SimpleBindableDelegate(@LayoutRes int itemLayoutResId, int modelId, ActionClickListener actionHandler, ViewTypeCondition viewTypeClause) {
         super(actionHandler);
         mItemLayoutResId = itemLayoutResId;
         mViewTypeClause = viewTypeClause;
@@ -92,39 +94,5 @@ public class SimpleBindableDelegate extends BaseBindableAdapterDelegate<List<Bas
     @Override
     public long getItemId(List<BaseModel> dataSource, int position) {
         return dataSource.get(position).getId();
-    }
-
-    public interface ViewTypeClause {
-        boolean isForViewType(List<?> items, int position);
-
-    }
-
-    private static class SimpleViewTypeClause implements ViewTypeClause {
-
-        private final Class<?> mClass;
-
-        SimpleViewTypeClause(@NonNull Class<?> aClass) {
-            mClass = aClass;
-        }
-        @Override
-        public boolean isForViewType(List<?> items, int position) {
-            return mClass.isAssignableFrom(items.get(position).getClass());
-        }
-
-    }
-
-    private static class SimpleItemViewTypeClause extends SimpleViewTypeClause {
-
-        private final int itemTypeTag;
-
-        SimpleItemViewTypeClause(@NonNull Class<?> aClass, int itemTypeTag) {
-            super(aClass);
-            this.itemTypeTag = itemTypeTag;
-        }
-        @Override
-        public boolean isForViewType(List<?> items, int position) {
-            return super.isForViewType(items, position) && ((SimpleItem) items.get(position)).itemTypeTag == itemTypeTag;
-        }
-
     }
 }
