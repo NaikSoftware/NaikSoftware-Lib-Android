@@ -18,30 +18,29 @@ import ua.naiksoftware.android.model.SimpleItem;
 /**
  * Delegate for simple items with data-binding
  */
-public class ModelBindableDelegate extends BaseBindableAdapterDelegate<List<BaseModel>, ViewDataBinding> {
+public class SimpleBindableDelegate extends BaseBindableAdapterDelegate<List<BaseModel>, ViewDataBinding> {
 
     private final int mModelId;
     private final int mItemLayoutResId;
     private final ViewTypeClause mViewTypeClause;
-    private final ActionClickListener mActionHandler;
 
-    public ModelBindableDelegate(@NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId) {
+    public SimpleBindableDelegate(@NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId) {
         this(itemLayoutResId, 0, new SimpleViewTypeClause(modelClass));
     }
 
-    public ModelBindableDelegate(@NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId, @IdRes int modelId) {
+    public SimpleBindableDelegate(@NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId, @IdRes int modelId) {
         this(itemLayoutResId, modelId, new SimpleViewTypeClause(modelClass));
     }
 
-    public ModelBindableDelegate(@LayoutRes int itemLayoutResId, int modelId, ViewTypeClause viewTypeClause) {
+    public SimpleBindableDelegate(@LayoutRes int itemLayoutResId, int modelId, ViewTypeClause viewTypeClause) {
         this(itemLayoutResId, modelId, null, viewTypeClause);
     }
 
-    public ModelBindableDelegate(ActionClickListener actionHandler, @NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId) {
+    public SimpleBindableDelegate(ActionClickListener actionHandler, @NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId) {
         this(actionHandler, modelClass, itemLayoutResId, 0);
     }
 
-    public ModelBindableDelegate(ActionClickListener actionHandler, @NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId, int modelId) {
+    public SimpleBindableDelegate(ActionClickListener actionHandler, @NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId, int modelId) {
         this(itemLayoutResId, modelId, actionHandler, new SimpleViewTypeClause(modelClass));
     }
 
@@ -51,7 +50,7 @@ public class ModelBindableDelegate extends BaseBindableAdapterDelegate<List<Base
      * @param itemTypeTag type to react to {@link SimpleItem} with this type in data set
      * @param itemLayoutResId layout for item
      */
-    public ModelBindableDelegate(@LayoutRes int itemLayoutResId, int itemTypeTag) {
+    public SimpleBindableDelegate(@LayoutRes int itemLayoutResId, int itemTypeTag) {
         this(itemLayoutResId, 0, new SimpleItemViewTypeClause(SimpleItem.class, itemTypeTag));
     }
 
@@ -61,15 +60,15 @@ public class ModelBindableDelegate extends BaseBindableAdapterDelegate<List<Base
      * @param itemTypeTag type to react to {@link SimpleItem} with this type in data set
      * @param itemLayoutResId layout for item
      */
-    public ModelBindableDelegate(ActionClickListener actionHandler, int itemTypeTag, @LayoutRes int itemLayoutResId) {
+    public SimpleBindableDelegate(ActionClickListener actionHandler, int itemTypeTag, @LayoutRes int itemLayoutResId) {
         this(itemLayoutResId, 0, actionHandler, new SimpleItemViewTypeClause(SimpleItem.class, itemTypeTag));
     }
 
-    public ModelBindableDelegate(@LayoutRes int itemLayoutResId, int modelId, ActionClickListener actionHandler, ViewTypeClause viewTypeClause) {
+    public SimpleBindableDelegate(@LayoutRes int itemLayoutResId, int modelId, ActionClickListener actionHandler, ViewTypeClause viewTypeClause) {
+        super(actionHandler);
         mItemLayoutResId = itemLayoutResId;
         mViewTypeClause = viewTypeClause;
         mModelId = modelId != 0 ? modelId : BR.model;
-        mActionHandler = actionHandler;
     }
 
     @Override
@@ -87,19 +86,12 @@ public class ModelBindableDelegate extends BaseBindableAdapterDelegate<List<Base
     public void bindHolder(@NonNull List<BaseModel> items, int position, @NonNull BindingHolder<ViewDataBinding> holder) {
         ViewDataBinding binding = holder.getBinding();
         binding.setVariable(mModelId, items.get(position));
-        if (mActionHandler != null) {
-            holder.getBinding().setVariable(BR.actionHandler, mActionHandler);
-        }
         binding.executePendingBindings();
     }
 
     @Override
     public long getItemId(List<BaseModel> dataSource, int position) {
         return dataSource.get(position).getId();
-    }
-
-    protected ActionClickListener getActionHandler() {
-        return mActionHandler;
     }
 
     public interface ViewTypeClause {

@@ -1,11 +1,9 @@
-package ua.naiksoftware.android.adapter.delegate;
+package ua.naiksoftware.android.adapter.delegate.itemsfactory;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.support.v4.view.LayoutInflaterFactory;
-import android.support.v7.app.AppCompatDelegate;
 import android.util.AttributeSet;
+import android.view.LayoutInflater;
 import android.view.View;
 
 import java.lang.reflect.Constructor;
@@ -20,56 +18,48 @@ import ua.naiksoftware.android.adapter.actionhandler.listener.ActionClickListene
 //import static ua.naiksoftware.android.util.LogHelper.*;
 
 /**
- * LayoutInflater factory with support for support-library widgets.
- * If you are not using support-library widgets use {@link ItemViewsFactory}
- * instead this
+ * Layout inflater factory. If you using support-library widgets
+ * use {@link ItemViewsFactoryCompat} instead this
  */
-class ItemViewsFactoryCompat extends ItemViewsFactoryAbs implements LayoutInflaterFactory {
+public class ItemViewsFactory extends ItemViewsFactoryAbs implements LayoutInflater.Factory {
 
-//    private static final String TAG = makeLogTag(ItemViewsFactoryCompat.class);
+//    private static final String TAG = makeLogTag(ItemViewsFactory.class);
 
-    private static final Class<?>[] CONSTRUCTOR_SIGNATURE = new Class[] {
-            Context.class, AttributeSet.class };
+    private static final Class<?>[] CONSTRUCTOR_SIGNATURE = new Class[]{
+            Context.class, AttributeSet.class};
 
     private final ActionClickListener mActionHandler;
-    private AppCompatDelegate mAppCompatDelegate;
     private Set<String> mActionViewTags = new HashSet<>();
 
-    public ItemViewsFactoryCompat(Activity activity, ActionClickListener actionHandler) {
-        mAppCompatDelegate = AppCompatDelegate.create(activity, null);
+    public ItemViewsFactory(ActionClickListener actionHandler) {
         mActionHandler = actionHandler;
     }
 
     @Override
-    public View onCreateView(View parent, String name, Context context, AttributeSet attrs) {
-
+    public View onCreateView(String name, Context context, AttributeSet attrs) {
         // Custom inflation code here
-        TypedArray ta = parent.getContext().obtainStyledAttributes(attrs, R.styleable.ActionHandlerAttrs);
+        TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.ActionHandlerAttrs);
         final String actionType = ta.getString(R.styleable.ActionHandlerAttrs_actionType);
         final String actionTypeLongClick = ta.getString(R.styleable.ActionHandlerAttrs_actionTypeLongClick);
         ta.recycle();
 
-        // Get themed views from AppCompat
-        View view = mAppCompatDelegate.createView(parent, name, context, attrs);
-
-        if (view == null) {
-            try {
-                Constructor<? extends View> constructor = null;
-                Class<? extends View> clazz = context.getClassLoader().loadClass(name).asSubclass(View.class);
-                constructor = clazz.getConstructor(CONSTRUCTOR_SIGNATURE);
-                constructor.setAccessible(true);
-                view = constructor.newInstance(context, attrs);
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            }
+        View view = null;
+        try {
+            Constructor<? extends View> constructor = null;
+            Class<? extends View> clazz = context.getClassLoader().loadClass(name).asSubclass(View.class);
+            constructor = clazz.getConstructor(CONSTRUCTOR_SIGNATURE);
+            constructor.setAccessible(true);
+            view = constructor.newInstance(context, attrs);
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
         }
 
 //        // Set listeners
@@ -105,7 +95,7 @@ class ItemViewsFactoryCompat extends ItemViewsFactoryAbs implements LayoutInflat
     }
 
     @Override
-    void setActionModel(View itemView, Object actionModel) {
+    public void setActionModel(View itemView, Object actionModel) {
         Iterator<String> iterator = mActionViewTags.iterator();
         while (iterator.hasNext()) {
             View actionView = itemView.findViewWithTag(iterator.next());

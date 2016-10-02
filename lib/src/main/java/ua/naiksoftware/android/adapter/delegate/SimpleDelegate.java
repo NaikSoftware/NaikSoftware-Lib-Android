@@ -24,26 +24,26 @@ import ua.naiksoftware.android.model.SimpleItem;
 
 /**
  * Delegate for simple items (if you are using data binding
- * use {@link ModelBindableDelegate} instead)
+ * use {@link SimpleBindableDelegate} instead)
  */
-public class ModelDelegate extends BaseAdapterDelegate<BaseModel> {
+public class SimpleDelegate extends BaseAdapterDelegate<BaseModel> {
 
     private final int mItemLayoutResId;
     private final ViewTypeClause mViewTypeClause;
     private final Map<Class<? extends BaseModel>, Map<Field, Annotation>> mFieldsMapping = new HashMap<>();
 
-    public ModelDelegate(@NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId) {
+    public SimpleDelegate(@NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId) {
         this(itemLayoutResId, new SimpleViewTypeClause(modelClass));
     }
 
-    public ModelDelegate(@LayoutRes int itemLayoutResId, ViewTypeClause viewTypeClause) {
+    public SimpleDelegate(@LayoutRes int itemLayoutResId, ViewTypeClause viewTypeClause) {
         this(null, null, viewTypeClause, itemLayoutResId);
     }
 
     /**
      * If you use support-library you must pass Activity as context
      */
-    public ModelDelegate(Context context, ActionClickListener actionHandler, @NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId) {
+    public SimpleDelegate(Context context, ActionClickListener actionHandler, @NonNull Class<? extends BaseModel> modelClass, @LayoutRes int itemLayoutResId) {
         this(context, actionHandler, new SimpleViewTypeClause(modelClass), itemLayoutResId);
     }
 
@@ -53,7 +53,7 @@ public class ModelDelegate extends BaseAdapterDelegate<BaseModel> {
      * @param itemTypeTag type to react to {@link SimpleItem} with this type in data set
      * @param itemLayoutResId layout for item
      */
-    public ModelDelegate(@LayoutRes int itemLayoutResId, int itemTypeTag) {
+    public SimpleDelegate(@LayoutRes int itemLayoutResId, int itemTypeTag) {
         this(itemLayoutResId, new SimpleItemViewTypeClause(SimpleItem.class, itemTypeTag));
     }
 
@@ -64,11 +64,11 @@ public class ModelDelegate extends BaseAdapterDelegate<BaseModel> {
      * @param itemTypeTag type to react to {@link SimpleItem} with this type in data set
      * @param itemLayoutResId layout for item
      */
-    public ModelDelegate(Context context, ActionClickListener actionHandler, int itemTypeTag, @LayoutRes int itemLayoutResId) {
+    public SimpleDelegate(Context context, ActionClickListener actionHandler, int itemTypeTag, @LayoutRes int itemLayoutResId) {
         this(context, actionHandler, new SimpleItemViewTypeClause(SimpleItem.class, itemTypeTag), itemLayoutResId);
     }
 
-    public ModelDelegate(Context context, ActionClickListener actionHandler, ViewTypeClause viewTypeClause, @LayoutRes int itemLayoutResId) {
+    public SimpleDelegate(Context context, ActionClickListener actionHandler, ViewTypeClause viewTypeClause, @LayoutRes int itemLayoutResId) {
         super(actionHandler, context);
         mItemLayoutResId = itemLayoutResId;
         mViewTypeClause = viewTypeClause;
@@ -122,7 +122,7 @@ public class ModelDelegate extends BaseAdapterDelegate<BaseModel> {
             for (Map.Entry<Field, Annotation> entry : fields.entrySet()) {
                 Field field = entry.getKey();
                 Annotation annotation = entry.getValue();
-                Class<? extends Annotation> fieldType = annotation.getClass();
+                Class<? extends Annotation> fieldType = annotation.annotationType();
                 if (fieldType == Text.class) {
                     TextView view = holder.getView(((Text) annotation).value());
                     view.setText((CharSequence) field.get(model));

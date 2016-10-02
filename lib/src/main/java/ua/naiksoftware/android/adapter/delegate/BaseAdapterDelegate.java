@@ -11,6 +11,9 @@ import android.view.ViewGroup;
 import java.util.List;
 
 import ua.naiksoftware.android.adapter.actionhandler.listener.ActionClickListener;
+import ua.naiksoftware.android.adapter.delegate.itemsfactory.ItemViewsFactory;
+import ua.naiksoftware.android.adapter.delegate.itemsfactory.ItemViewsFactoryAbs;
+import ua.naiksoftware.android.adapter.delegate.itemsfactory.ItemViewsFactoryCompat;
 import ua.naiksoftware.android.adapter.util.SimpleViewHolder;
 import ua.naiksoftware.android.util.ObjectUtils;
 
