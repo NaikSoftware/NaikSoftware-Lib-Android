@@ -41,4 +41,17 @@ public class SimpleViewHolder extends RecyclerView.ViewHolder {
         }
         return view;
     }
+
+    public <T extends View> T findAndCache(@IdRes int viewId) {
+        T view = (T) mViewSparseArray.get(viewId);
+        if (view == null) {
+            view = (T) itemView.findViewById(viewId);
+            if (view == null) {
+                throw new IllegalArgumentException("View with id=" + viewId
+                        + " not found in this ViewHolder root view");
+            }
+            mViewSparseArray.put(viewId, view);
+        }
+        return view;
+    }
 }

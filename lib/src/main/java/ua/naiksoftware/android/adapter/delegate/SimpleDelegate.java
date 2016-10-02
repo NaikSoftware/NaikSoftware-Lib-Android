@@ -124,10 +124,10 @@ public class SimpleDelegate extends BaseAdapterDelegate<BaseModel> {
                 Annotation annotation = entry.getValue();
                 Class<? extends Annotation> fieldType = annotation.annotationType();
                 if (fieldType == Text.class) {
-                    TextView view = holder.getView(((Text) annotation).value());
+                    TextView view = holder.findAndCache(((Text) annotation).value());
                     view.setText((CharSequence) field.get(model));
                 } else if (fieldType == DrawableId.class) {
-                    ImageView view = holder.getView(((DrawableId) annotation).value());
+                    ImageView view = holder.findAndCache(((DrawableId) annotation).value());
                     view.setImageResource((int) field.get(model));
                 }
             }
