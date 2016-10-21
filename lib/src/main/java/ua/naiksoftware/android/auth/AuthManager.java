@@ -50,7 +50,7 @@ public class AuthManager<T> {
     }
 
     public interface LoginCallback<T> {
-        
+
         void onSuccess(T user);
 
         void onFailed(Throwable message);

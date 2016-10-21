@@ -36,19 +36,19 @@ public class SimpleBindableDelegate extends BaseBindableAdapterDelegate<List<Bas
             mItemLayoutResId = itemLayoutResId;
         }
 
-        public Builder forClass(Class<? extends BaseModel> modelClass) {
+        public SimpleBindableDelegate forClass(Class<? extends BaseModel> modelClass) {
             mViewTypeCondition = new ClassViewTypeCondition(modelClass);
-            return this;
+            return build();
         }
 
-        public Builder forCondition(ViewTypeCondition viewTypeCondition) {
+        public SimpleBindableDelegate forCondition(ViewTypeCondition viewTypeCondition) {
             mViewTypeCondition = viewTypeCondition;
-            return this;
+            return build();
         }
 
-        public Builder forSimpleItem(int itemTypeTag) {
+        public SimpleBindableDelegate forSimpleItem(int itemTypeTag) {
             mViewTypeCondition = new SimpleItemViewTypeCondition(itemTypeTag);
-            return this;
+            return build();
         }
 
         public Builder withActionHandler(ActionClickListener actionHandler) {

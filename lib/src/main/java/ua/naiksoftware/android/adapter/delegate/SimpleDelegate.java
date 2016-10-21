@@ -45,14 +45,19 @@ public class SimpleDelegate extends BaseAdapterDelegate<BaseModel> {
             mItemLayoutResId = itemLayoutResId;
         }
 
-        public Builder forClass(Class<? extends BaseModel> modelClass) {
+        public SimpleDelegate forClass(Class<? extends BaseModel> modelClass) {
             mViewTypeCondition = new ClassViewTypeCondition(modelClass);
-            return this;
+            return build();
         }
 
-        public Builder forCondition(ViewTypeCondition viewTypeCondition) {
+        public SimpleDelegate forCondition(ViewTypeCondition viewTypeCondition) {
             mViewTypeCondition = viewTypeCondition;
-            return this;
+            return build();
+        }
+
+        public SimpleDelegate forSimpleItem(int itemTypeTag) {
+            mViewTypeCondition = new SimpleItemViewTypeCondition(itemTypeTag);
+            return build();
         }
 
         /**
@@ -61,11 +66,6 @@ public class SimpleDelegate extends BaseAdapterDelegate<BaseModel> {
         public Builder withActionHandler(Context context, ActionClickListener actionHandler) {
             mContext = context;
             mActionHandler = actionHandler;
-            return this;
-        }
-
-        public Builder forSimpleItem(int itemTypeTag) {
-            mViewTypeCondition = new SimpleItemViewTypeCondition(itemTypeTag);
             return this;
         }
 
